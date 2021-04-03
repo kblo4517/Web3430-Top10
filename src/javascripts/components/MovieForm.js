@@ -31,8 +31,13 @@ const validationSchema = yup.object({
 
 })
 export default function MovieForm () {
-    let {movies, setMovies} = useContext(MovieContext)
+    let {movies, setMovies, authenticated, setAuthenticated} = useContext(MovieContext)
     let {mid} = useParams()
+
+    if(!authenticated) {
+        document.location = '/signin'
+        return <></>
+    }
 
     let movie = mid ? movies.find(m => m.id == mid) : {} 
     let is_new = mid === undefined
@@ -54,23 +59,26 @@ export default function MovieForm () {
         } : {...movie},
         validationSchema,
         onSubmit(values) {
-            if(is_new) {
-              let id = movies.length
-              while(true) {
-                  let mv = movies.find(m => m.id == id++)
-                  if(mv === undefined) break
-              }  
-
-              values.id = id
-              movies.push(values)
-            } else {
-                let mv = movies.find(m => m.id == movie.id)
-                Object.assign(mv, values)
-            }
-
-            setMovies([...movies])
-            history.push('/movies')
-            toast(is_new ? "Successfully added" : "Successfully updated")
+            fetch(`/api/movies${is_new ? '' : '/' + movie.id}`, {
+                method: is_new ? "POST" : "PUT",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                credentials: 'same-origin',
+                body: JSON.stringify(values)
+            }). then(() => {
+                toast('Successfully submitted', {
+                    onClose: () => {
+                        document.location= "/movies"
+                    }
+                })
+            }). catch((error) => {
+                toast('Failed to Submit', {
+                    onClose: ()=> {
+                        document.location= "/movies"
+                    }
+                })
+            })
         }
     })
     

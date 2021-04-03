@@ -25,7 +25,7 @@ const customStyles = {
 export default function Movie(props) {
 
     //need access to movie list to update state through context 
-    let {movies, setMovies} = useContext(MovieContext)
+    let {movies, setMovies, authenticated, setAuthentication} = useContext(MovieContext)
     let [modalOpen, setModalOpen] = useState(false)
 
     const m = props.movie
@@ -34,16 +34,27 @@ export default function Movie(props) {
 
 
     const deleteMovie = () => {
-      for (let i in movies) {
-        if(movies[i].id === m.id){
-          movies.splice(+i, 1)
-        }
-      }
+        fetch(`/api/movies/${m.id}`, {
+          method: "DELETE",
+          headers: {
+              "Content-Type": "application/json"
+          },
+          credentials: 'same-origin',
+        }). then(() => {
+            toast('Successfully submitted', {
+                onClose: () => {
+                    document.location= "/movies"
+                }
+            })
 
-      setMovies([...movies])
-      setModalOpen(false)
-      history.push('./movies')
-      toast('Movie successfully deleted')
+            setModalOpen(false)
+        }). catch((error) => {
+            toast('Failed to Submit', {
+                onClose: ()=> {
+                    document.location= "/movies"
+                }
+            })
+        })
     }
 
     return (
@@ -58,7 +69,10 @@ export default function Movie(props) {
           <li><FaThumbsUp color="maroon" onClick={onLike}/><small>{m.likes ? m.likes : 0}</small></li>
         </ul>
         <button className="primary" onClick={() => history.push(`/movies/${m.id}/edit`)}>Edit</button>
-        <button className="primary" onClick={() => setModalOpen(true)}>Delete</button>
+        <button className="primary" onClick={() => {
+          if(authenticated) setModalOpen(true)
+          else document.location = '/signin'
+          }}>Delete</button>
       </div>
 
       <Modal isOpen={modalOpen} onRequestClose={() => setModalOpen(false)} style={customStyles} contentLabel="Are you sure?">

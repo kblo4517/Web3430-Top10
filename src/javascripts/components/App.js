@@ -6,14 +6,7 @@ export default function Main (){
 
     return (
         <Router>
-            <div className="container">
-                <header>
-                    <h1>
-                        Top 10 Movies: Kavon Blossom
-                    </h1>
-                </header>
-                <MovieList />
-            </div>
+            <MovieList />
         </Router>
     )
 }
